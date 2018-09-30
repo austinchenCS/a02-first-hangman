@@ -2,7 +2,7 @@ defmodule GameState do
   defstruct game_state: :initializing,
             turns_left: 7,
             letters: [],
-            used: ["e"],
+            used: [],
             last_guess: ""
 end
 
@@ -17,34 +17,24 @@ defmodule Hangman.Game do
   end
 
   def tally(game) do
-    #IO.puts(game.letters)
-    disp_letters = build_board(game.letters, game.used)
-
-    # %{
-    #   game_state: game.game_state,
-    #   turns_left: game.turns_left,
-    #   letters: disp_letters,
-    #   used: game.used
-    # }
+    disp_letters = build_letters_state(game.letters, game.used)
+    %{
+      game_state: game.game_state,
+      turns_left: game.turns_left,
+      letters: disp_letters,
+      used: game.used
+    }
 
   end
 
-  # def tester([h | t], stuff) do
-  #   IO.puts(h)
-  #   IO.puts(t)
-  #   IO.puts(stuff)
-  # end
+  # Only shows letter in current board state if letter is found in "used"
+  def show_letter(true, letter), do: letter
+  def show_letter(false, letter), do: "_"
 
-  def return_letter(true, letter), do: letter
-  def return_letter(false, letter), do: "_"
-
-  def search_used(letter, used) do
-    return_letter(letter in used, letter)
-  end
-
-  def build_board([ ], used), do: []
-  def build_board([ h | t ], used) do
-    [ search_used(h, used) | build_board(t, used) ]
+  # Takes the current state of the board and displays letters only if found in "used" list.
+  def build_letters_state([], used), do: []
+  def build_letters_state([ h | t ], used) do
+    [ (h in used) |> show_letter(h) | t |> build_letters_state(used) ]
   end
 
   # def make_move(game, letter) do
