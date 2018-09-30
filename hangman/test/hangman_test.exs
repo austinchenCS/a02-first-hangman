@@ -3,6 +3,10 @@ defmodule HangmanTest do
   doctest Hangman
 
   test "greets the world" do
-    assert Hangman.hello() == :world
+    game = Hangman.new_game()
+    Hangman.tally(game)
   end
 end
+
+
+#def apply([ h | t ]), do: [ handle_individual | apply(tail)]
