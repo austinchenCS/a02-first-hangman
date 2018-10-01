@@ -18,6 +18,10 @@ defmodule Hangman.Game do
     %GameState{letters: _word} = struct(%GameState{}, letters: word)
   end
 
+  # Just in case someone plays the non-wrapper version
+  def tally( game = %GameState{ game_state: :won  } ), do: game
+  def tally( game = %GameState{ game_state: :loss } ), do: game
+
   def tally(game) do
     # "Massage" the display list of letters by listing "_" for each character not guessed
     disp_letters = build_letters_state(game.game_state, game.letters, game.used)
