@@ -3,11 +3,11 @@ defmodule HumanPlayer.Mixfile do
 
   def project do
     [
-      app:       :human_player,
-      version:   "0.1.0",
-      elixir:    "~ 1.6",
-      deps:     deps()
-      start_permanent: Mix.env ==: prod,
+      app:              :human_player,
+      version:          "0.1.0",
+      elixir:           "~> 1.6",
+      deps:             deps(),
+      start_permanent:  Mix.env == :prod
     ]
   end
 

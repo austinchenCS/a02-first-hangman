@@ -18,7 +18,7 @@ defmodule Hangman.Game do
     %GameState{letters: _word} = struct(%GameState{}, letters: word)
   end
 
-  # Just in case someone plays the non-wrapper version
+  # Just in case someone plays the non-wrapper version. Return the game status.
   def tally( game = %GameState{ game_state: :won  } ), do: game
   def tally( game = %GameState{ game_state: :loss } ), do: game
 
@@ -49,7 +49,7 @@ defmodule Hangman.Game do
   # Takes the current state of the board and displays letters only if found in "used" list.
   def transform_letters([], _used), do: []
   def transform_letters([ h | t ], used) do
-    [ (h in used) |> show_letter(h) | t |> transform_letters(used) ]
+    [ h in used |> show_letter(h) | t |> transform_letters(used) ]
   end
 
   # Pass in a letter as current guess, and update game status as necessary.
@@ -60,61 +60,99 @@ defmodule Hangman.Game do
     {updated_game, updated_tally}
   end
 
-  # START OF LOGIC
-  def handle_guess(game, guess) do
-    # Pattern match for duplicates.
-    guess in game.used
-    |> duplicate_check(game, guess)
+  ##############################################################################
+  # Duplication check, to see whether "guess" is already in use.
+  ##################
 
+
+  # START OF LOGIC. This initial handler function, while only wrapping "duplicate_check",
+  # begins the tree of function calls that evaluates the appropriate state changes
+  # given a certain guess.
+  def handle_guess(game, guess) do
+    duplicate_check(game, guess)
   end
 
-  # IF THERE ARE DUPLICATES
-  def duplicate_check(true, game, _guess) do
+  ##############################################################################
+  # Duplication check, to see whether "guess" is already in use.
+  ##################
+
+  def duplicate_check(game, guess) do
+    # Pattern match for duplicates.
+    guess in game.used
+    |> duplicate_found(game, guess)
+  end
+
+  # Duplicate found, STOPPING POINT
+  def duplicate_found(true, game, _guess) do
     %GameState{ game | game_state: :already_used }
   end
 
-  # NO duplicates
-  def duplicate_check(false, game, guess) do
-    # FIRST CHECK LOSS
-    loss_check(game.turns_left, game, guess, guess in game.letters)
+  # No duplicates found, CONTINUE to loss_check
+  def duplicate_found(false, game, guess) do
+    loss_check(game, guess)
   end
 
-  # LOST
-  def loss_check(1, game, guess, false) do
+  ##############################################################################
+  # Game LOSS check, to see if current guess will lose the game.
+  ##################
+
+  # Check for loss
+  def loss_check(game, guess) do
+    guess not in game.letters
+    |> loss_found(game.turns_left, game, guess)
+  end
+
+  # Lost, STOPPING POINT
+  def loss_found(true, 1, game, guess) do
     %GameState{ game |
       game_state: :lost,
       turns_left: 0,
       used: [guess | game.used] |> Enum.sort() }
   end
 
-  # NOT A LOSS, BUT NEED TO NOW DETERMINE WIN OR NOT
-  def loss_check(_, game, guess, _) do
+  # NO Loss, CONTINUE on to win_check
+  def loss_found(false, _, game, guess) do
     win_check(game, guess)
   end
 
+  ##############################################################################
+  # Game WIN check, to see if current guess will win the game.
+  ##################
+
+  # Check for win
   def win_check(game, guess) do
     # Step 1: update "used" with guess to evaluate win or not
     curr_used = [guess | game.used] |> Enum.sort()
     curr_letters = build_letters_state(:no_state, game.letters, curr_used)
-    won(game, guess, curr_letters == game.letters)
+
+    curr_letters == game.letters
+    |> won(game, guess)
   end
 
-  def won(game, guess, true) do
+  # Won, STOPPING POINT
+  def won(true, game, guess) do
     %GameState{ game |
       game_state: :won,
       turns_left: game.turns_left,
       used: [guess | game.used] |> Enum.sort() }
   end
 
-  def won(game, guess, false) do
+  # Not a win, CONTINUE to guess_evaluate
+  def won(false, game, guess) do
     guess_evaluate(game, guess)
   end
 
+  ##############################################################################
+  # Good/Bad check, to see if the guessed move is "good" or "bad".
+  ##################
+
+  # Check if guess is in letter.
   def guess_evaluate(game, guess) do
     guess not in game.letters
     |> bad_guess(game, guess)
   end
 
+  # BAD guess
   def bad_guess(true, game, guess) do
     %GameState{ game |
     game_state: :bad_guess,
@@ -123,7 +161,7 @@ defmodule Hangman.Game do
     last_guess: guess }
   end
 
-  # GOOD GUESS
+  # GOOD guess (not a bad guess)
   def bad_guess(false, game, guess) do
     %GameState{ game |
     game_state: :good_guess,
@@ -131,26 +169,5 @@ defmodule Hangman.Game do
     used: [guess | game.used] |> Enum.sort(),
     last_guess: guess }
   end
-
-
-
-
-
-
-  # # function_to_call(true, ____)
-  # # function_to_call(false, ____)
-
-  # def update_state() do
-  #   is_duplicate
-
-  # end
-
-  # def is_duplicate(letter, letter),      do: :already_used
-  # def is_duplicate(letter, diff_letter), do:
-
-  # def check_guess([h | t], letter) do
-  #     [ is_duplicate(h, letter) | check_duplicate(t) ]
-  # end
-
 
 end
