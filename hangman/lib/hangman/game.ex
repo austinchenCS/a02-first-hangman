@@ -112,8 +112,7 @@ defmodule Hangman.Game do
   def loss_found(true, 1, game, _guess) do
     %GameState{ game |
       game_state: :lost,
-      turns_left: 0,
-      }
+      turns_left: 0 }
   end
 
   # NO Loss, CONTINUE on to win_check
@@ -137,7 +136,7 @@ defmodule Hangman.Game do
   def won(true, game, _guess) do
     %GameState{ game |
       game_state: :won,
-      turns_left: game.turns_left}
+      turns_left: game.turns_left }
   end
 
   # Not a win, CONTINUE to guess_evaluate
