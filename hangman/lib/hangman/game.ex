@@ -84,6 +84,11 @@ defmodule Hangman.Game do
 
   # No duplicates found, CONTINUE to loss_check
   def duplicate_found(false, game, guess) do
+    # One design choice I made was to add "guess" to the list of "used" after
+    # determining that the guess is not a duplicate. Each decision path
+    # thereafter relies on an updated "used" state. So instead of repeating this
+    # concatenation multiple times, it is done once here.
+    game = %GameState{ game | used: [guess | game.used] |> Enum.sort() }
     loss_check(game, guess)
   end
 
@@ -102,7 +107,7 @@ defmodule Hangman.Game do
     %GameState{ game |
       game_state: :lost,
       turns_left: 0,
-      used: [guess | game.used] |> Enum.sort() }
+      }
   end
 
   # NO Loss, CONTINUE on to win_check
@@ -117,9 +122,7 @@ defmodule Hangman.Game do
   # Check for win
   def win_check(game, guess) do
     # Step 1: update "used" with guess to evaluate win or not
-    curr_used = [guess | game.used] |> Enum.sort()
-    curr_letters = build_letters_state(:no_state, game.letters, curr_used)
-
+    curr_letters = build_letters_state(:no_state, game.letters, game.used)
     (curr_letters == game.letters)
     |> won(game, guess)
   end
@@ -128,8 +131,7 @@ defmodule Hangman.Game do
   def won(true, game, guess) do
     %GameState{ game |
       game_state: :won,
-      turns_left: game.turns_left,
-      used: [guess | game.used] |> Enum.sort() }
+      turns_left: game.turns_left}
   end
 
   # Not a win, CONTINUE to guess_evaluate
@@ -147,21 +149,19 @@ defmodule Hangman.Game do
     |> bad_guess(game, guess)
   end
 
-  # BAD guess
+  # BAD guess. State update (stopping point)
   def bad_guess(true, game, guess) do
     %GameState{ game |
     game_state: :bad_guess,
     turns_left: game.turns_left - 1,
-    used: [guess | game.used] |> Enum.sort(),
     last_guess: guess }
   end
 
-  # GOOD guess
+  # GOOD guess. State update (stopping point)
   def bad_guess(false, game, guess) do
     %GameState{ game |
     game_state: :good_guess,
     turns_left: game.turns_left,
-    used: [guess | game.used] |> Enum.sort(),
     last_guess: guess }
   end
 
