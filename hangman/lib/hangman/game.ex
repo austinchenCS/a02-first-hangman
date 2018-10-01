@@ -8,7 +8,6 @@ end
 
 defmodule Hangman.Game do
 
-
   # Create a new game state
   def new_game() do
     # Pick a random word from the dictionary
@@ -49,47 +48,56 @@ defmodule Hangman.Game do
   end
 
   # Pass in a letter as current guess, and update game status as necessary.
-  def make_move(game, letter) do
-    # # Check if letter exists within game_state
-    # # If yes, :already_used
-    # # If No,
-    # #   -> Check word. If exists within word, :good_guess and word is not
-    # # If yes,
-    # #   -> Check word. If it does not exist within word, :bad_guess
+  def make_move(game, guess) do
+    updated_game = handle_guess(game, guess)
+    updated_tally = tally(updated_game)
 
-    # # THESE ARE THE THINGS I HAVE TO UPDATE:
-    # #         game_state:                   :initializing,
-    # #         turns_left:                   7,
-    # #         letters:                      ["a", "_", "_", "_", "_"],
-    # #         used:                         ["a"],
-    # #         last_guess:                   "a"
-
-
-    # ## DUUPLICATE GUESS
-    # # Check if guessed letter is already in board
-    # already_used(game.letters, letter)
-    #   game_state: :already_used
-    #   turns_left: same
-    #   letters: same
-    #   used: same
-    #   last_guess: same
-
-    # # check if guessed letter is in "used" pile
-    #   already_used(game.used, letter)
-    #   game_state: :already_used
-    #   turns_left: same
-    #   letters: same
-    #   used: same
-    #   last_guess: same
-
-    # #
-
-
-
-    # {updated_game, updated_tally}
+    {updated_game, updated_tally}
   end
 
-  defp already_used(list, letter), do: letter in list
+  # START OF LOGIC
+  def handle_guess(game, guess) do
+    # Pattern match for duplicates.
+    letter in game.used
+    |> duplicate_check(game, guess)
+
+  end
+
+  # IF THERE ARE DUPLICATES
+  def duplicate_check(true, game, _guess) do
+    %GameState{ game | game_state: :already_used }
+  end
+
+  # NO duplicates
+  def duplicate_check(false, game, guess) do
+    # FIRST CHECK LOSS
+    loss_check(game.turns_left, game, guess, guess in game.letters)
+  end
+
+  # LOST
+  def loss_check(1, game, guess, false), do
+    %GameState{ game |
+      game_state: :lost,
+      turns_left: 0,
+      used: [guess | game.used] |> Enum.sort() }
+  end
+
+  # NOT A LOSS, BUT NEED TO NOW DETERMINE WIN OR NOT
+  def loss_check(_, game, guess, _), do
+    win_check(game, guess)
+  end
+
+  # def win_check(game, guess) do
+  #   #
+  # end
+
+
+
+
+
+
+
+
 
   # # function_to_call(true, ____)
   # # function_to_call(false, ____)
