@@ -109,7 +109,7 @@ defmodule Hangman.Game do
   end
 
   # Lost, STOPPING POINT and state update
-  def loss_found(true, 1, game, guess) do
+  def loss_found(true, 1, game, _guess) do
     %GameState{ game |
       game_state: :lost,
       turns_left: 0,
@@ -134,7 +134,7 @@ defmodule Hangman.Game do
   end
 
   # Won, STOPPING POINT and state update
-  def won(true, game, guess) do
+  def won(true, game, _guess) do
     %GameState{ game |
       game_state: :won,
       turns_left: game.turns_left}
