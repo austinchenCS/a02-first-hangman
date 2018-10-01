@@ -53,6 +53,7 @@ defmodule Hangman.Game do
   end
 
   # Pass in a letter as current guess, and update game status as necessary.
+  @spec make_move(struct(), binary()) :: tuple()
   def make_move(game, guess) do
     updated_game = handle_guess(game, guess)
     updated_tally = tally(updated_game)
@@ -60,9 +61,14 @@ defmodule Hangman.Game do
     {updated_game, updated_tally}
   end
 
-  # START OF LOGIC. This initial handler function, while only wrapping "duplicate_check",
-  # begins the tree of function calls that evaluates the appropriate state changes
-  # given a certain guess.
+  ##############################################################################
+  # START OF MAKE_MOVE CONTROL FLOW LOGIC.
+  # This initial handler function, although only wrapping "duplicate_check",
+  # begins the tree of function calls that evaluates the appropriate state
+  # changes given a certain guess.
+  ##################
+
+  # Passes game state and guess onto first check, duplicate_check.
   def handle_guess(game, guess) do
     duplicate_check(game, guess)
   end
@@ -77,7 +83,7 @@ defmodule Hangman.Game do
     |> duplicate_found(game, guess)
   end
 
-  # Duplicate found, STOPPING POINT
+  # Duplicate found, STOPPING POINT and state update
   def duplicate_found(true, game, _guess) do
     %GameState{ game | game_state: :already_used }
   end
@@ -102,7 +108,7 @@ defmodule Hangman.Game do
     |> loss_found(game.turns_left, game, guess)
   end
 
-  # Lost, STOPPING POINT
+  # Lost, STOPPING POINT and state update
   def loss_found(true, 1, game, guess) do
     %GameState{ game |
       game_state: :lost,
@@ -127,7 +133,7 @@ defmodule Hangman.Game do
     |> won(game, guess)
   end
 
-  # Won, STOPPING POINT
+  # Won, STOPPING POINT and state update
   def won(true, game, guess) do
     %GameState{ game |
       game_state: :won,
