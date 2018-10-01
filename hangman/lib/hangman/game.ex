@@ -49,7 +49,7 @@ defmodule Hangman.Game do
   # Takes the current state of the board and displays letters only if found in "used" list.
   def transform_letters([], _used), do: []
   def transform_letters([ h | t ], used) do
-    [ h in used |> show_letter(h) | t |> transform_letters(used) ]
+    [ (h in used) |> show_letter(h) | t |> transform_letters(used) ]
   end
 
   # Pass in a letter as current guess, and update game status as necessary.
@@ -59,11 +59,6 @@ defmodule Hangman.Game do
 
     {updated_game, updated_tally}
   end
-
-  ##############################################################################
-  # Duplication check, to see whether "guess" is already in use.
-  ##################
-
 
   # START OF LOGIC. This initial handler function, while only wrapping "duplicate_check",
   # begins the tree of function calls that evaluates the appropriate state changes
@@ -111,7 +106,7 @@ defmodule Hangman.Game do
   end
 
   # NO Loss, CONTINUE on to win_check
-  def loss_found(false, _, game, guess) do
+  def loss_found(_, _, game, guess) do
     win_check(game, guess)
   end
 
@@ -125,7 +120,7 @@ defmodule Hangman.Game do
     curr_used = [guess | game.used] |> Enum.sort()
     curr_letters = build_letters_state(:no_state, game.letters, curr_used)
 
-    curr_letters == game.letters
+    (curr_letters == game.letters)
     |> won(game, guess)
   end
 
@@ -161,7 +156,7 @@ defmodule Hangman.Game do
     last_guess: guess }
   end
 
-  # GOOD guess (not a bad guess)
+  # GOOD guess
   def bad_guess(false, game, guess) do
     %GameState{ game |
     game_state: :good_guess,
@@ -169,5 +164,7 @@ defmodule Hangman.Game do
     used: [guess | game.used] |> Enum.sort(),
     last_guess: guess }
   end
+
+
 
 end
