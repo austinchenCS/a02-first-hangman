@@ -2,7 +2,7 @@ defmodule GameState do
   defstruct game_state: :initializing,
             turns_left: 7,
             letters: [],
-            used: ["e"],
+            used: [],
             last_guess: ""
 end
 
@@ -27,7 +27,8 @@ defmodule Hangman.Game do
       game_state: game.game_state,
       turns_left: game.turns_left,
       letters: disp_letters,
-      used: game.used
+      used: game.used,
+      last_guess: game.last_guess
     }
 
   end
@@ -58,7 +59,7 @@ defmodule Hangman.Game do
   # START OF LOGIC
   def handle_guess(game, guess) do
     # Pattern match for duplicates.
-    letter in game.used
+    guess in game.used
     |> duplicate_check(game, guess)
 
   end
@@ -75,7 +76,7 @@ defmodule Hangman.Game do
   end
 
   # LOST
-  def loss_check(1, game, guess, false), do
+  def loss_check(1, game, guess, false) do
     %GameState{ game |
       game_state: :lost,
       turns_left: 0,
@@ -83,16 +84,49 @@ defmodule Hangman.Game do
   end
 
   # NOT A LOSS, BUT NEED TO NOW DETERMINE WIN OR NOT
-  def loss_check(_, game, guess, _), do
+  def loss_check(_, game, guess, _) do
     win_check(game, guess)
   end
 
-  # def win_check(game, guess) do
-  #   #
-  # end
+  def win_check(game, guess) do
+    # Step 1: update "used" with guess to evaluate win or not
+    curr_used = [guess | game.used] |> Enum.sort()
+    curr_letters = build_letters_state(:no_state, game.letters, curr_used)
+    won(game, guess, curr_letters == game.letters)
+  end
 
+  def won(game, guess, true) do
+    %GameState{ game |
+      game_state: :won,
+      turns_left: game.turns_left,
+      used: [guess | game.used] |> Enum.sort() }
+  end
 
+  def won(game, guess, false) do
+    guess_evaluate(game, guess)
+  end
 
+  def guess_evaluate(game, guess) do
+    guess not in game.letters
+    |> bad_guess(game, guess)
+  end
+
+  def bad_guess(true, game, guess) do
+    %GameState{ game |
+    game_state: :bad_guess,
+    turns_left: game.turns_left - 1,
+    used: [guess | game.used] |> Enum.sort(),
+    last_guess: guess }
+  end
+
+  # GOOD GUESS
+  def bad_guess(false, game, guess) do
+    %GameState{ game |
+    game_state: :good_guess,
+    turns_left: game.turns_left,
+    used: [guess | game.used] |> Enum.sort(),
+    last_guess: guess }
+  end
 
 
 
